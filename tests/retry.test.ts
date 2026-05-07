@@ -109,7 +109,6 @@ describe("Retry & Failure Handling", () => {
   });
 
   it("should not modify a payment already in terminal state", async () => {
-    // Create a payment directly in SUCCESS state
     const payment = await prisma.payment.create({
       data: {
         idempotencyKey: "terminal-skip-001",
@@ -121,15 +120,12 @@ describe("Retry & Failure Handling", () => {
       },
     });
 
-    // Verify the preCheck logic: terminal payments should not be modified
     const found = await paymentRepository.findById(payment.id);
     expect(found).not.toBeNull();
     expect(found?.status).toBe(PaymentStatus.SUCCESS);
 
-    // Verify no lock was acquired (lockedAt stays null)
     expect(found?.lockedAt).toBeNull();
 
-    // Payment should remain unchanged
     const updated = await prisma.payment.findUnique({
       where: { id: payment.id },
     });

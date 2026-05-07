@@ -13,11 +13,9 @@ export const webhookService = {
   }> {
     const { eventType, paymentId, gatewayRef, status, message, timestamp } = payload;
 
-    // 1. Payment exists check
     const payment = await paymentRepository.findById(paymentId);
     if (!payment) throw new NotFoundError(`Payment not found: ${paymentId}`);
 
-    // 2. Duplicate webhook check — same eventType + paymentId already processed?
     const existing = await prisma.webhookEvent.findFirst({
       where: {
         paymentId,
@@ -37,7 +35,6 @@ export const webhookService = {
         existingId: existing.id,
       });
 
-      // Log it but dont reprocess
       await prisma.webhookEvent.create({
         data: {
           paymentId,
@@ -54,8 +51,6 @@ export const webhookService = {
       };
     }
 
-    // 3. Conflicting state check
-    // e.g. webhook says SUCCESS but payment is already FAILED
     const isConflict = this.isConflictingState(payment.status, status);
 
     if (isConflict) {
@@ -81,7 +76,6 @@ export const webhookService = {
       };
     }
 
-    // 4. Process webhook — update payment status
     const newStatus = this.mapWebhookStatusToPayment(status);
 
     await paymentRepository.updateStatus(paymentId, newStatus, {
@@ -90,7 +84,6 @@ export const webhookService = {
       ...(newStatus === PaymentStatus.SUCCESS && { processedAt: new Date() }),
     });
 
-    // 5. Save webhook event as PROCESSED
     await prisma.webhookEvent.create({
       data: {
         paymentId,
@@ -101,7 +94,6 @@ export const webhookService = {
       },
     });
 
-    // 6. Audit log
     await paymentRepository.createAuditLog({
       paymentId,
       event: "WEBHOOK_PROCESSED",
@@ -123,7 +115,6 @@ export const webhookService = {
     };
   },
 
-  // ─── Helpers ──────────────────────────────────────────────────────
 
   mapWebhookStatusToPayment(status: "SUCCESS" | "FAILED" | "PROCESSING"): PaymentStatus {
     switch (status) {
@@ -137,8 +128,6 @@ export const webhookService = {
     currentStatus: PaymentStatus,
     incomingStatus: "SUCCESS" | "FAILED" | "PROCESSING"
   ): boolean {
-    // Only conflict if states genuinely contradict
-    // SUCCESS payment ko FAILED kehna = conflict
     if (currentStatus === PaymentStatus.SUCCESS && incomingStatus === "FAILED") return true;
     if (currentStatus === PaymentStatus.FAILED && incomingStatus === "SUCCESS") return true;
     return false;

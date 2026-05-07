@@ -12,7 +12,6 @@ const server = app.listen(env.PORT, async () => {
     environment: env.NODE_ENV,
   });
 
-  // DB connection check
   try {
     await prisma.$connect();
     logger.info(`Database connected`);
@@ -21,11 +20,9 @@ const server = app.listen(env.PORT, async () => {
     process.exit(1);
   }
 
-  // Start BullMQ retry worker
   startRetryWorker();
 });
 
-// ─── Graceful Shutdown ────────────────────────────────────────────────
 async function shutdown(signal: string) {
   logger.info(`${signal} received — shutting down gracefully`);
 
@@ -41,7 +38,6 @@ async function shutdown(signal: string) {
     process.exit(0);
   });
 
-  // Force exit after 10s
   setTimeout(() => {
     logger.error(`Forced shutdown after timeout`);
     process.exit(1);
@@ -51,7 +47,6 @@ async function shutdown(signal: string) {
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
-// Unhandled errors
 process.on("unhandledRejection", (reason) => {
   logger.error(`Unhandled rejection`, { reason });
 });

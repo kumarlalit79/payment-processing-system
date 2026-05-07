@@ -50,10 +50,8 @@ describe("Webhook API", () => {
         timestamp: new Date().toISOString(),
       };
 
-      // First
       await request(app).post("/api/webhooks/payment").send(payload);
 
-      // Duplicate
       const res = await request(app)
         .post("/api/webhooks/payment")
         .send(payload);
@@ -64,7 +62,7 @@ describe("Webhook API", () => {
     it("should detect conflicting webhook", async () => {
       const payment = await createTestPayment("wh-003");
 
-      // First — SUCCESS
+      
       await request(app)
         .post("/api/webhooks/payment")
         .send({
@@ -75,7 +73,7 @@ describe("Webhook API", () => {
           timestamp: new Date().toISOString(),
         });
 
-      // Conflict — FAILED after SUCCESS
+      
       const res = await request(app)
         .post("/api/webhooks/payment")
         .send({
@@ -106,7 +104,7 @@ describe("Webhook API", () => {
     it("should return 400 for missing required fields", async () => {
       const res = await request(app)
         .post("/api/webhooks/payment")
-        .send({ eventType: "payment.success" }); // missing paymentId, status
+        .send({ eventType: "payment.success" }); 
 
       expect(res.status).toBe(400);
     });

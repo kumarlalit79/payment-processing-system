@@ -9,7 +9,7 @@ export const errorMiddleware = (
   res: Response,
   next: NextFunction
 ): void => {
-  // Zod validation error
+  
   if (err instanceof ZodError) {
     res.status(400).json({
       success: false,
@@ -20,7 +20,7 @@ export const errorMiddleware = (
     return;
   }
 
-  // Our custom AppError
+  
   if (err instanceof AppError) {
     logger.warn(`AppError: ${err.message}`, {
       code: err.code,
@@ -36,7 +36,7 @@ export const errorMiddleware = (
     return;
   }
 
-  // Unknown error
+  
   logger.error(`Unhandled error`, {
     message: err.message,
     stack: err.stack,

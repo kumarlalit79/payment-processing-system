@@ -12,13 +12,13 @@ import { env } from "../../config/env";
 
 export const paymentService = {
 
-  // ─── Create Payment ───────────────────────────────────────────────
+  
   async createPayment(
     dto: CreatePaymentDTO,
     idempotencyKey: string
   ): Promise<{ payment: PaymentResponse; isDuplicate: boolean }> {
 
-    // 1. Idempotency check
+    
     const { isDuplicate, existingPayment } = await checkIdempotency(idempotencyKey);
 
     if (isDuplicate && existingPayment) {
@@ -33,7 +33,7 @@ export const paymentService = {
       };
     }
 
-    // 2. Create payment record in DB
+    
     const payment = await paymentRepository.create({
       idempotencyKey,
       amount: dto.amount,
@@ -49,15 +49,13 @@ export const paymentService = {
       currency: payment.currency,
     });
 
-    // 3. Audit log
+    
     await paymentRepository.createAuditLog({
       paymentId: payment.id,
       event: "PAYMENT_CREATED",
       toStatus: PaymentStatus.PENDING,
     });
 
-    // 4. Process async — dont make user wait
-    // Skip in test environment to prevent background work leaking between tests
     if (env.NODE_ENV !== "test") {
       this.processPayment(payment.id).catch((err) => {
         logger.error(`Background processing failed`, {
@@ -70,7 +68,6 @@ export const paymentService = {
     return { payment: this.formatPayment(payment), isDuplicate: false };
   },
 
-  // ─── Process Payment ──────────────────────────────────────────────
   async processPayment(paymentId: string, attempt: number = 1): Promise<void> {
     const preCheck = await paymentRepository.findById(paymentId);
     if (!preCheck) {
@@ -90,7 +87,6 @@ export const paymentService = {
 
     const lockId = uuidv4();
 
-    // 1. Acquire lock — concurrency control
     const payment = await paymentRepository.findByIdWithLock(paymentId, lockId);
 
     if (!payment) {
@@ -100,7 +96,6 @@ export const paymentService = {
       return;
     }
 
-    // 2. Validate state — only PENDING can be processed
     if (payment.status !== PaymentStatus.PENDING) {
       logger.warn(`Payment not in PENDING state — skipping`, {
         paymentId,
@@ -110,7 +105,6 @@ export const paymentService = {
       return;
     }
 
-    // 3. Move to PROCESSING
     try {
       await paymentRepository.updateStatus(paymentId, PaymentStatus.PROCESSING);
     } catch (err: any) {
@@ -129,7 +123,6 @@ export const paymentService = {
     logger.info(`Payment processing started`, { paymentId, attempt });
 
     try {
-      // 4. Call gateway via circuit breaker
       const gatewayResponse = await gatewayCircuitBreaker.execute(() =>
         processWithTimeout({
           paymentId,
@@ -139,7 +132,7 @@ export const paymentService = {
         })
       );
 
-      // 5. Handle gateway response
+      
       if (gatewayResponse.status === "SUCCESS") {
         try {
           await paymentRepository.updateStatus(paymentId, PaymentStatus.SUCCESS, {
@@ -165,7 +158,7 @@ export const paymentService = {
         });
 
       } else {
-        // Gateway returned FAILED
+        
         try {
           await this.handleFailure(paymentId, attempt, gatewayResponse.message);
         } catch (err: any) {
@@ -174,7 +167,6 @@ export const paymentService = {
       }
 
     } catch (error: any) {
-      // Gateway threw error (timeout, circuit open, network)
       logger.error(`Gateway error during processing`, {
         paymentId,
         attempt,
@@ -189,7 +181,7 @@ export const paymentService = {
     }
   },
 
-  // ─── Handle Failure + Retry Logic ────────────────────────────────
+  
   async handleFailure(
     paymentId: string,
     attempt: number,
@@ -198,12 +190,9 @@ export const paymentService = {
     const maxRetries = env.MAX_RETRIES;
 
     if (attempt <= maxRetries) {
-      // Exponential backoff: 2^attempt * 1000ms
-      // attempt 1 → 2s, attempt 2 → 4s, attempt 3 → 8s
       const delayMs = Math.pow(2, attempt) * 1000;
       const nextRetryAt = new Date(Date.now() + delayMs);
 
-      // Reset to PENDING for retry
       await paymentRepository.updateStatus(paymentId, PaymentStatus.PENDING, {
         retryCount: attempt,
         nextRetryAt,
@@ -226,7 +215,6 @@ export const paymentService = {
         reason,
       });
 
-      // Add to BullMQ queue with delay
       const jobPayload: RetryJobPayload = { paymentId, attempt: attempt + 1 };
 
       await paymentRetryQueue.add(
@@ -236,7 +224,7 @@ export const paymentService = {
       );
 
     } else {
-      // Max retries exhausted — mark FAILED permanently
+      
       await paymentRepository.updateStatus(paymentId, PaymentStatus.FAILED, {
         lastError: reason,
         retryCount: attempt,
@@ -258,7 +246,7 @@ export const paymentService = {
     }
   },
 
-  // ─── Get Payment ──────────────────────────────────────────────────
+ 
   async getPayment(id: string): Promise<PaymentResponse> {
     const payment = await paymentRepository.findById(id);
 
@@ -267,7 +255,7 @@ export const paymentService = {
     return this.formatPayment(payment);
   },
 
-  // ─── Get All Payments ─────────────────────────────────────────────
+  
   async getAllPayments(page: number = 1, limit: number = 10) {
     const result = await paymentRepository.findAll(page, limit);
 
@@ -277,7 +265,7 @@ export const paymentService = {
     };
   },
 
-  // ─── Format Response ──────────────────────────────────────────────
+  
   formatPayment(payment: any): PaymentResponse {
     return {
       id: payment.id,

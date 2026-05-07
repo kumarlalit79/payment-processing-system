@@ -13,7 +13,6 @@ afterAll(async () => {
 
 describe("Payment API", () => {
 
-  // ─── Create Payment ───────────────────────────────────────────────
 
   describe("POST /api/payments", () => {
 
@@ -44,13 +43,13 @@ describe("Payment API", () => {
         paymentMethod: "upi",
       };
 
-      // First request
+      
       await request(app)
         .post("/api/payments")
         .set("idempotency-key", "duplicate-key-001")
         .send(payload);
 
-      // Second request — same key
+      
       const res = await request(app)
         .post("/api/payments")
         .set("idempotency-key", "duplicate-key-001")
@@ -82,7 +81,7 @@ describe("Payment API", () => {
         .set("idempotency-key", "val-002")
         .send({
           amount: 100,
-          currency: "IN", // only 2 chars
+          currency: "IN", 
           paymentMethod: "upi",
         });
 
@@ -97,7 +96,7 @@ describe("Payment API", () => {
         .send({
           amount: 100,
           currency: "INR",
-          paymentMethod: "crypto", // not allowed
+          paymentMethod: "crypto", 
         });
 
       expect(res.status).toBe(400);
@@ -119,7 +118,7 @@ describe("Payment API", () => {
 
   });
 
-  // ─── Get Payment ──────────────────────────────────────────────────
+  
 
   describe("GET /api/payments/:id", () => {
 
@@ -147,12 +146,12 @@ describe("Payment API", () => {
 
   });
 
-  // ─── Get All Payments ─────────────────────────────────────────────
+  
 
   describe("GET /api/payments", () => {
 
     it("should return paginated payments", async () => {
-      // Create 3 payments
+      
       for (let i = 0; i < 3; i++) {
         await request(app)
           .post("/api/payments")
@@ -184,7 +183,7 @@ describe("Payment API", () => {
 
   });
 
-  // ─── Audit Logs ───────────────────────────────────────────────────
+  
 
   describe("GET /api/payments/:id/audit", () => {
 
@@ -196,7 +195,7 @@ describe("Payment API", () => {
 
       const id = create.body.data.id;
 
-      // Wait for processing
+      
       await new Promise((r) => setTimeout(r, 1000));
 
       const res = await request(app).get(`/api/payments/${id}/audit`);

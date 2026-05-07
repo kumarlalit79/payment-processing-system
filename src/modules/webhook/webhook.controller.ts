@@ -6,16 +6,15 @@ import { logger } from "../../config/logger";
 
 export const webhookController = {
 
-  // POST /api/webhooks/payment
+  
   handlePaymentWebhook: asyncHandler(async (req: Request, res: Response) => {
     const payload = req.body;
 
-    // Basic validation
+    
     if (!payload.paymentId || !payload.eventType || !payload.status) {
       throw new ValidationError("Missing required fields: paymentId, eventType, status");
     }
 
-    // Timestamp nahi aaya toh current time
     if (!payload.timestamp) {
       payload.timestamp = new Date().toISOString();
     }
@@ -35,7 +34,7 @@ export const webhookController = {
     });
   }),
 
-  // GET /api/webhooks/payment/:paymentId/events
+  
   getWebhookEvents: asyncHandler(async (req: Request, res: Response) => {
     const  paymentId  = req.params.paymentId as string;
 

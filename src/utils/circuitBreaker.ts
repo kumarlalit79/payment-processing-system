@@ -1,15 +1,15 @@
 import { logger } from "../config/logger";
 
 export enum CircuitState {
-  CLOSED = "CLOSED",     // normal — requests ja rahe hain
-  OPEN = "OPEN",         // gateway down — requests block
-  HALF_OPEN = "HALF_OPEN", // test kar rahe hain — ek request allow
+  CLOSED = "CLOSED",     
+  OPEN = "OPEN",         
+  HALF_OPEN = "HALF_OPEN",
 }
 
 interface CircuitBreakerOptions {
-  failureThreshold: number;   // kitne failures pe OPEN ho
-  successThreshold: number;   // HALF_OPEN mein kitne success pe CLOSED ho
-  timeout: number;            // OPEN ke baad kitne ms baad HALF_OPEN try karo
+  failureThreshold: number;   
+  successThreshold: number;   
+  timeout: number;            
 }
 
 export class CircuitBreaker {
@@ -25,7 +25,7 @@ export class CircuitBreaker {
     this.options = {
       failureThreshold: options?.failureThreshold ?? 5,
       successThreshold: options?.successThreshold ?? 2,
-      timeout: options?.timeout ?? 30000, // 30 seconds
+      timeout: options?.timeout ?? 30000, 
     };
   }
 
@@ -39,7 +39,7 @@ export class CircuitBreaker {
         throw new Error(`Circuit breaker is OPEN for ${this.name}`);
       }
 
-      // Its timout — go to HALF_OPEN 
+      
       this.state = CircuitState.HALF_OPEN;
       logger.info(`Circuit HALF_OPEN — testing gateway`, { circuit: this.name });
     }
@@ -92,7 +92,7 @@ export class CircuitBreaker {
   }
 }
 
-// Singleton — poore app mein ek hi circuit breaker gateway ke liye
+
 export const gatewayCircuitBreaker = new CircuitBreaker("payment-gateway", {
   failureThreshold: 5,
   successThreshold: 2,

@@ -7,14 +7,11 @@ import { logger } from "./config/logger";
 
 const app = express();
 
-// ─── Core Middleware ─────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ─── Rate Limiting ───────────────────────────────────────────────────
 app.use("/api/", rateLimiter);
 
-// ─── Request Logger ──────────────────────────────────────────────────
 app.use((req, res, next) => {
   logger.debug(`Incoming request`, {
     method: req.method,
@@ -24,7 +21,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// ─── Health Check ────────────────────────────────────────────────────
 app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -34,11 +30,9 @@ app.get("/health", (req, res) => {
   });
 });
 
-// ─── Routes ──────────────────────────────────────────────────────────
 app.use("/api/payments", paymentRoutes);
 app.use("/api/webhooks", webhookRoutes);
 
-// ─── 404 Handler ─────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -47,7 +41,6 @@ app.use((req, res) => {
   });
 });
 
-// ─── Global Error Handler ─────────────────────────────────────────────
 app.use(errorMiddleware);
 
 export default app;

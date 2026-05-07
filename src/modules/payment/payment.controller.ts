@@ -6,9 +6,9 @@ import { logger } from "../../config/logger";
 
 export const paymentController = {
 
-  // POST /api/payments
+  
   createPayment: asyncHandler(async (req: Request, res: Response) => {
-    // Idempotency key — client bhejta hai header mein, nahi bheja toh generate karo
+    
     const idempotencyKey =
       (req.headers["idempotency-key"] as string) ?? uuidv4();
 
@@ -33,7 +33,7 @@ export const paymentController = {
     });
   }),
 
-  // GET /api/payments/:id
+  
   getPayment: asyncHandler(async (req: Request, res: Response) => {
     const  id  = req.params.id as string;
 
@@ -45,7 +45,7 @@ export const paymentController = {
     });
   }),
 
-  // GET /api/payments
+  
   getAllPayments: asyncHandler(async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
@@ -64,11 +64,11 @@ export const paymentController = {
     });
   }),
 
-  // GET /api/payments/:id/audit
+  
   getAuditLogs: asyncHandler(async (req: Request, res: Response) => {
     const  id  = req.params.id as string;
 
-    // Payment exists check
+    
     await paymentService.getPayment(id);
 
     const { prisma } = await import("../../config/database");

@@ -29,18 +29,18 @@ export const paymentRepository = {
     return prisma.payment.findUnique({ where: { idempotencyKey: key } });
   },
 
-  // Concurrency control — pessimistic lock using raw query
+ 
   async findByIdWithLock(id: string, lockedBy: string) {
-    // Check if already locked by someone else
+    
     const payment = await prisma.payment.findUnique({ where: { id } });
 
     if (!payment) return null;
 
-    // Already locked by another process
+    
     if (
       payment.lockedAt &&
       payment.lockedBy !== lockedBy &&
-      Date.now() - payment.lockedAt.getTime() < 30000 // 30s lock expiry
+      Date.now() - payment.lockedAt.getTime() < 30000 
     ) {
       logger.warn(`Payment already locked`, {
         paymentId: id,
@@ -49,7 +49,7 @@ export const paymentRepository = {
       return null;
     }
 
-    // Acquire lock
+    
     return prisma.payment.update({
       where: { id },
       data: {
