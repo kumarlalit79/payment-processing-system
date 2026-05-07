@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Payment {
+  id               String        @id @default(uuid())
+  idempotencyKey   String        @unique @map("idempotency_key")
+  amount           Decimal       @db.Decimal(12, 2)
+  currency         String        @default("INR")
+  status           PaymentStatus @default(PENDING)
+  paymentMethod    String        @map("payment_method")
+  description      String?
+  metadata         Json?
+
+  retryCount       Int           @default(0) @map("retry_count")
+  maxRetries       Int           @default(3) @map("max_retries")
+  nextRetryAt      DateTime?     @map("next_retry_at")
+  lastError        String?       @map("last_error")
+
+  gatewayRef       String?       @map("gateway_ref")  // gateway's transaction ID
+  gatewayResponse  Json?         @map("gateway_response")
+
+  lockedAt         DateTime?     @map("locked_at")    // for concurrency control
+  lockedBy         String?       @map("locked_by")
+
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+  processedAt      DateTime?     @map("processed_at")
+
+  webhookEvents    WebhookEvent[]
+  auditLogs        AuditLog[]
+
+  @@map("payments")
+}
+
+model WebhookEvent {
+  id          String              @id @default(uuid())
+  paymentId   String              @map("payment_id")
+  eventType   String              @map("event_type")
+  payload     Json
+  status      WebhookEventStatus  @default(RECEIVED)
+  processedAt DateTime?           @map("processed_at")
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  payment     Payment             @relation(fields: [paymentId], references: [id])
+
+  @@map("webhook_events")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  paymentId   String   @map("payment_id")
+  event       String
+  fromStatus  String?  @map("from_status")
+  toStatus    String?  @map("to_status")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  payment     Payment  @relation(fields: [paymentId], references: [id])
+
+  @@map("audit_logs")
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+}
+
+enum WebhookEventStatus {
+  RECEIVED
+  PROCESSED
+  DUPLICATE
+  CONFLICTED
+}

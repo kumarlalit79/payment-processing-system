@@ -1,0 +1,43 @@
+# dependencies
+node_modules
+
+# output
+out
+dist
+*.tgz
+
+# code coverage
+coverage
+*.lcov
+
+# logs
+logs
+*.log
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# IDE
+.idea
+.vscode
+
+# OS
+.DS_Store
+
+# Prisma generated client
+/src/generated/prisma
+
+# Assignment files (not part of codebase)
+task.txt
+already_did.txt
+claude chat.txt
+payment-service-claude.pdf

@@ -1,0 +1,44 @@
+{
+  "name": "payment-system",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon --exec bun src/server.ts",
+    "build": "tsc",
+    "start": "bun dist/server.js",
+    "test": "bun test --timeout 30000",
+    "db:migrate": "bunx prisma migrate dev",
+    "db:generate": "bunx prisma generate",
+    "db:studio": "bunx prisma studio"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.6.0",
+    "@types/supertest": "^7.2.0",
+    "@types/uuid": "^11.0.0",
+    "@types/yamljs": "^0.2.34",
+    "nodemon": "^3.1.14",
+    "prisma": "^7.8.0",
+    "supertest": "^7.2.2"
+  },
+  "peerDependencies": {
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "@types/swagger-ui-express": "^4.1.8",
+    "bullmq": "^5.76.5",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.0",
+    "ioredis": "^5.10.1",
+    "pg": "^8.20.0",
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^14.0.0",
+    "winston": "^3.19.0",
+    "yamljs": "^0.3.0",
+    "zod": "^4.4.3"
+  }
+}
